@@ -1,0 +1,21 @@
+#### ignore all .idea files ...
+*
+!.gitignore
+
+#### except
+
+# Version Control configuration for your project
+!vcs.xml
+
+# how IDEA should treat the text files in your project
+!encodings.xml
+
+# automatic code formatting
+!codeStyles/
+!codeStyles/**
+
+# project specific words
+!dictionaries/
+!dictionaries/**
+
+!sqldialects.xml
