@@ -1,0 +1,17 @@
+---
+- name: Welcome message
+  hosts: all
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/vars.yaml"
+  become_user: "{{ username }}"
+  gather_facts: true
+  tasks:
+    - name: Get current user
+      become: true
+      command: whoami
+      register: whoami_user
+
+    - name: Show welcome message
+      become: true
+      debug:
+        msg: "Welcome {{ whoami_user.stdout }}."

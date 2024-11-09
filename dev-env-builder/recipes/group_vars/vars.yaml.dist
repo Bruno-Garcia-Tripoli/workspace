@@ -1,0 +1,20 @@
+# There are the development environment username and password. You can change them if you are running asinble on your
+# physical machine and not on a virtual machine. Right now it has not been tested with other values.
+username: developer
+password: password
+
+# Is this going to be on a virtual machine (VMare, Virtualbox) or on a physical machine?
+is_virtual_machine: false
+
+# Your full name so we can see who has done the contributions
+git_user: ~
+
+# Your profesional email. The Github account is personal, but it can be linked to many email addresses
+git_email: ~
+
+# Add or remove as necesary
+repositories:
+	# repo_name:
+	#	repo: git_ssh_address
+	#	ssh: ssh_key_path
+
