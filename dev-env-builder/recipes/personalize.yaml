@@ -1,0 +1,46 @@
+---
+- name: Personalize
+  hosts: all
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/vars.yaml"
+  gather_facts: true
+  vars:
+    ansible_home: "{{ lookup('env', 'HOME') }}"
+  tasks:
+    - name: Check if org.gtk.gtk3.Settings.FileChooser is available
+      shell: gsettings list-schemas | grep org.gtk.gtk3.Settings.FileChooser
+      register: schema_check
+      ignore_errors: yes
+
+    - name: Show hidden files by default
+      when: schema_check.rc == 0
+      command: gsettings set org.gtk.gtk3.Settings.FileChooser show-hidden true
+
+    - name: Check if org.gtk.gtk4.Settings.FileChooser is available
+      shell: gsettings list-schemas | grep org.gtk.gtk4.Settings.FileChooser
+      register: schema_check
+      ignore_errors: yes
+
+    - name: Show hidden files by default
+      when: schema_check.rc == 0
+      command: gsettings set org.gtk.gtk4.Settings.FileChooser show-hidden true
+
+    - name: Install basic development tools
+      become: true
+      apt:
+        name:
+          - git
+          - curl
+          - jq
+          - xclip
+        state: latest
+
+    - name: Shell dot files
+      template:
+        src: 'templates/aliases/{{ item }}'
+        dest: '{{ ansible_home }}/.bash_aliases/{{ item }}'
+        owner: '{{ username }}'
+        group: '{{ username }}'
+        mode: '0664'
+      with_items:
+        - extra_aliases

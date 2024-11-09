@@ -15,3 +15,6 @@
       become: true
       debug:
         msg: "Welcome {{ whoami_user.stdout }}."
+
+- import_playbook: upgrade.yaml
+- import_playbook: personalize.yaml
