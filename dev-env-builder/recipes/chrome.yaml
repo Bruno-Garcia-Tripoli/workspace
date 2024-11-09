@@ -1,0 +1,75 @@
+---
+- name: Install Chrome
+  hosts: all
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/vars.yaml"     
+  gather_facts: true  
+  tasks:
+    - name: Check if Chrome is installed
+      stat:
+        path: /usr/bin/google-chrome
+      register: chrome_installed
+      
+    - name: Download Chrome
+      get_url:
+          url: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          dest: /tmp/chrome.deb
+      when: not chrome_installed.stat.exists
+      
+    - name: Install Chrome
+      become: true
+      apt:
+        deb: /tmp/chrome.deb
+      when: not chrome_installed.stat.exists
+      
+    - name: Remove Chrome installation package
+      file:
+        path: /tmp/chrome.deb
+        state: absent
+      when: not chrome_installed.stat.exists
+      
+    - name: Install Chrome gnome shell
+      become: true
+      apt:
+        name:
+          - chrome-gnome-shell
+        state: latest
+
+    - name: Gather current favorite applications      
+      shell: gsettings get org.gnome.shell favorite-apps | tr "'" "\""
+      register: favorite_apps
+      
+    - name: Init dashboard process
+      set_fact:
+        old_favorite_apps: "{{ favorite_apps.stdout }}"
+      
+    - name: Remove default browser (firefox) from dashboard
+      shell: |
+        if echo '{{ favorite_apps.stdout }}' | grep -q 'firefox_firefox.desktop'; then
+          echo '{{ favorite_apps.stdout }}' | jq 'map(select(. != "firefox_firefox.desktop"))' -c
+        else
+          echo '{{ favorite_apps.stdout }}'
+        fi  
+      register: favorite_apps
+
+    - name: Add Chrome to dashboard list      
+      shell: |
+        if echo '{{ favorite_apps.stdout }}' | grep -q 'google-chrome.desktop'; then          
+          echo '{{ favorite_apps.stdout }}' | jq '["google-chrome.desktop"] + .' -c
+        else
+          echo '{{ favorite_apps.stdout }}'
+        fi
+      register: favorite_apps
+
+    - name: Parse dashboard
+      shell: echo '{{ favorite_apps.stdout }}' | tr "\"" "'"
+      register: favorite_apps
+
+    - name: Save new dashboard as fact
+      set_fact:
+        new_favorite_apps: "{{ favorite_apps.stdout }}"  
+
+    - name: Apply dashboard changes
+      when: old_favorite_apps != new_favorite_apps
+      shell: gsettings set org.gnome.shell favorite-apps "{{ favorite_apps.stdout }}"
+      
