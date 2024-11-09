@@ -24,3 +24,4 @@
 - import_playbook: flameshot.yaml
 - import_playbook: docker.yaml
 - import_playbook: antivirus.yaml
+- import_playbook: repositories.yaml
