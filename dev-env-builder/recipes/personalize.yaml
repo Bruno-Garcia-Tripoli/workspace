@@ -33,6 +33,7 @@
           - curl
           - jq
           - xclip
+          - python3-lxml
         state: latest
 
     - name: Shell dot files

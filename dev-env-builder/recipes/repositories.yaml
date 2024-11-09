@@ -1,0 +1,59 @@
+---
+- name: Clone repositories
+  hosts: all
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/vars.yaml"
+  gather_facts: true
+  vars:
+    ansible_home: "{{ lookup('env', 'HOME') }}"
+    workspace_path: "{{ (inventory_dir + '/..') | realpath }}"
+  tasks:
+    - name: Set global Git username
+      git_config:
+        name: "user.name"
+        value: "{{ git_user }}"
+        scope: global
+      when: git_user is defined and git_user | length > 0
+
+    - name: Set global Git email
+      git_config:
+        name: "user.email"
+        value: "{{ git_email }}"
+        scope: global
+      when: git_email is defined and git_email | length > 0
+
+    - name: Clone repositories
+      ansible.builtin.git:
+        repo: "{{ item.value.repository if item.value is mapping else item.value }}"
+        dest: "{{ item.value.dest if item.value.dest is defined else workspace_path + '/projects/' + item.key }}"
+        key_file: "{{ item.value.ssh if item.value.ssh is defined else omit }}"
+        version: "HEAD"
+        update: yes
+      loop: "{{ repositories | dict2items }}"
+      register: git_clone_results
+
+    - name: Filter successfully cloned repositories
+      set_fact:
+        cloned_repos: >-
+          {{
+            git_clone_results.results
+            | selectattr('changed', 'eq', true)
+            | selectattr('invocation.module_args.dest', 'search', workspace_path + '/projects')
+            | map(attribute='invocation.module_args.dest')
+            | list
+          }}
+
+    - name: Add cloned repository mappings to .idea vcs.xml
+      xml:
+        path: "{{ workspace_path }}/.idea/vcs.xml"
+        xpath: "/project/component/mapping"
+        insertafter: true
+        attribute:
+        add_children:
+          - mapping:
+              directory: "$PROJECT_DIR$/projects/{{ item | basename }}"
+              vcs: Git
+        pretty_print: true
+        state: present
+      loop: "{{ cloned_repos }}"
+      when: cloned_repos | length > 0
