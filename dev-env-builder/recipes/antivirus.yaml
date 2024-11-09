@@ -1,0 +1,15 @@
+---
+- name: Install Antivirus
+  hosts: all
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/vars.yaml"
+  gather_facts: true
+  tasks:
+    - name: Install ClamAV, ClamTK
+      become: true
+      apt:
+        name:
+          - clamav
+          - clamtk
+          - clamav-daemon
+        state: latest
