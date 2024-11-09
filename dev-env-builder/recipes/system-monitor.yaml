@@ -1,0 +1,85 @@
+---
+- name: Install System Monitor
+  hosts: all
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/vars.yaml"  
+  gather_facts: true 
+  vars:
+    ansible_remote_tmp: "/tmp/.ansible/tmp"
+    ansible_home: "{{ lookup('env', 'HOME') }}"
+    project_name: "gnome-shell-system-monitor-applet"    
+    gsettings:
+      'org.gnome.shell.extensions.system-monitor cpu-graph-width': '30'
+      'org.gnome.shell.extensions.system-monitor memory-graph-width': '30'
+      'org.gnome.shell.extensions.system-monitor net-graph-width': '30'
+      'org.gnome.shell.extensions.system-monitor icon-display': 'false'
+      'org.gnome.shell.extensions.system-monitor disk-display': 'true'
+      'org.gnome.shell.extensions.system-monitor disk-graph-width': '30'
+      
+  tasks:
+    - name: Get GNOME Shell version
+      shell: gnome-shell --version | awk '{print $3}'
+      register: gnome_shell_version
+
+    - name: Validate GNOME Shell version
+      debug:
+        msg: "Valid GNOME Shell version: {{ gnome_shell_version.stdout }}"
+      when: gnome_shell_version.stdout is version_compare('3.26', '>')
+        
+    #- name: Update apt
+    #  become: true
+    #  apt:
+    #    upgrade: yes
+    #    update_cache: yes
+    
+    - name: Install dependencies
+      become: true
+      apt:
+        name:
+          - gir1.2-gtop-2.0
+          - gir1.2-nm-1.0
+          - gir1.2-clutter-1.0
+          - gnome-shell-extensions
+        state: latest
+    
+    #- name: Create GNOME Shell extension folder
+    #  become: true
+    #  file:
+    #    path: "{{ ansible_home }}/.local/share/gnome-shell/extensions"
+    #    state: directory
+    
+    #- name: Check if the project already exists
+    #  stat:
+    #    path: "{{ ansible_home }}/.local/share/gnome-shell/extensions/{{ project_name }}"
+    #  register: dir_check  
+     
+    #- name: Remove the project if it already exists 
+    #  file:
+    #    path: "{{ ansible_home }}/.local/share/gnome-shell/extensions/{{ project_name }}"
+    #    state: absent
+    #  when: dir_check.stat.exists
+      
+    #- name: Clone the project repository
+    #  become: true
+    #  git:
+    #    repo: git@github.com:paradoxxxzero/gnome-shell-system-monitor-applet.git
+    #    dest: "{{ ansible_home }}/.local/share/gnome-shell/extensions/{{ project_name }}"
+    #    clone: yes
+    #    update: yes
+    #  environment:
+    #    GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
+    
+    - name: Create a symbolic link to GNOME Shell extension
+      become: true
+      file:
+        src: "{{ ansible_home }}/.local/share/gnome-shell/extensions/{{ project_name }}/system-monitor@paradoxxx.zero.gmail.com"
+        path: "{{ ansible_home }}/.local/share/gnome-shell/extensions/system-monitor@paradoxxx.zero.gmail.com"
+        state: link
+        force: yes
+        
+    - name: Enable System Monitor extension    
+      shell: gnome-extensions enable system-monitor@paradoxxx.zero.gmail.com
+            
+      
+
+

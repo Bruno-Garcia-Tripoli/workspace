@@ -16,11 +16,12 @@
       debug:
         msg: "Welcome {{ whoami_user.stdout }}."
 
-- import_playbook: upgrade.yaml
-- import_playbook: personalize.yaml
-- import_playbook: chrome.yaml
-- import_playbook: terminal.yaml
-- import_playbook: phpstorm.yaml
-- import_playbook: flameshot.yaml
-- import_playbook: docker.yaml
-- import_playbook: antivirus.yaml
+#- import_playbook: upgrade.yaml
+#- import_playbook: personalize.yaml
+#- import_playbook: chrome.yaml
+#- import_playbook: terminal.yaml
+#- import_playbook: phpstorm.yaml
+#- import_playbook: flameshot.yaml
+#- import_playbook: docker.yaml
+#- import_playbook: antivirus.yaml
+- import_playbook: system-monitor.yaml
