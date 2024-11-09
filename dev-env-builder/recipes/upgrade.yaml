@@ -1,0 +1,12 @@
+---
+- name: Upgrade
+  hosts: all
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/vars.yaml"  
+  gather_facts: true      
+  tasks:           
+    - name: Update apt
+      become: true
+      apt:
+        upgrade: yes
+        update_cache: yes           

@@ -1,0 +1,3 @@
+alias clip-copy='xclip -sel clip'
+alias clip-paste='xclip -sel clip -o'
+alias clipboard='clip-copy && clip-paste'
