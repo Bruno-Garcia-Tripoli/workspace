@@ -22,3 +22,4 @@
 - import_playbook: terminal.yaml
 - import_playbook: phpstorm.yaml
 - import_playbook: flameshot.yaml
+- import_playbook: docker.yaml
