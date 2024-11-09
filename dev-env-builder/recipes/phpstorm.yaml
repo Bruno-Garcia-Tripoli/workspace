@@ -1,0 +1,41 @@
+---
+- name: Install PHPStorm
+  hosts: all
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/vars.yaml"
+  gather_facts: true
+  tasks:
+    - name: Install PHPStorm
+      become: true
+      snap:
+        name: phpstorm
+        classic: yes
+
+    - name: Gather current favorite applications
+      shell: gsettings get org.gnome.shell favorite-apps | tr "'" "\""
+      register: favorite_apps
+
+    - name: Init dashboard process
+      set_fact:
+        old_favorite_apps: "{{ favorite_apps.stdout }}"
+
+    - name: Add PHPStorm to dashboard list
+      shell: |
+        if echo '{{ favorite_apps.stdout }}' | grep -q 'phpstorm_phpstorm.desktop' ; then          
+          echo '{{ favorite_apps.stdout }}'
+        else
+          echo '{{ favorite_apps.stdout }}' | jq '. + ["phpstorm_phpstorm.desktop"]' -c
+        fi
+      register: favorite_apps
+
+    - name: Parse dashboard
+      shell: echo '{{ favorite_apps.stdout }}' | tr "\"" "'"
+      register: favorite_apps
+
+    - name: Save new dashboard as fact
+      set_fact:
+        new_favorite_apps: "{{ favorite_apps.stdout }}"
+
+    - name: Apply dashboard changes
+      when: old_favorite_apps != new_favorite_apps
+      shell: gsettings set org.gnome.shell favorite-apps "{{ new_favorite_apps }}"
