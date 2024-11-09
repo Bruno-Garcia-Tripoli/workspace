@@ -1,0 +1,91 @@
+---
+- name: Install and personalize the terminal
+  hosts: all
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/vars.yaml"
+  gather_facts: true
+  vars:
+    ansible_home: "{{ lookup('env', 'HOME') }}"
+  tasks:
+    - name: Install terminator
+      become: true
+      apt:
+        name:
+          - terminator
+        state: latest
+
+    - name: Gather current favorite applications
+      shell: gsettings get org.gnome.shell favorite-apps | tr "'" "\""
+      register: favorite_apps
+
+    - name: Init dashboard process
+      set_fact:
+        old_favorite_apps: "{{ favorite_apps.stdout }}"
+
+    - name: Add Terminal to dashboard list
+      shell: |
+        if echo '{{ favorite_apps.stdout }}' | grep -q 'terminator.desktop' ; then          
+          echo '{{ favorite_apps.stdout }}'
+        else
+          echo '{{ favorite_apps.stdout }}' | jq '. + ["terminator.desktop"]' -c
+        fi
+      register: favorite_apps
+
+    - name: Parse dashboard
+      shell: echo '{{ favorite_apps.stdout }}' | tr "\"" "'"
+      register: favorite_apps
+
+    - name: Save new dashboard as fact
+      set_fact:
+        new_favorite_apps: "{{ favorite_apps.stdout }}"
+
+    - name: Apply dashboard changes
+      when: old_favorite_apps != new_favorite_apps
+      shell: gsettings set org.gnome.shell favorite-apps "{{ new_favorite_apps }}"
+
+    - name: Install zsh
+      become: true
+      apt:
+        name:
+          - zsh
+          - powerline
+          - fonts-powerline
+        state: latest
+
+    - name: Download Oh My Zsh installation script
+      get_url:
+        url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+        dest: /tmp/install_ohmyzsh.sh
+
+    - name: Run Oh My Zsh installation script
+      command: sh /tmp/install_ohmyzsh.sh --unattended
+      register: ohmyzsh_result
+      failed_when: "'FAILED' in ohmyzsh_result.stderr"
+
+    - name: Clone Oh-my-Zsh Syntax Highlighting
+      git:
+        repo: git@github.com:zsh-users/zsh-syntax-highlighting.git
+        dest: '{{ ansible_home }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting'
+
+    - name: Clone Oh-my-Zsh Zsh Autosuggestions
+      git:
+        repo: git@github.com:zsh-users/zsh-autosuggestions.git
+        dest: '{{ ansible_home }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions'
+
+    - name: Shell dot files
+      template:
+        src: 'templates/{{ item }}'
+        dest: '{{ ansible_home }}/{{ item }}'
+        owner: '{{ username }}'
+        group: '{{ username }}'
+        mode: '0664'
+      with_items:
+        - .bashrc
+        - .zshrc
+
+    - name: Change user's default shell
+      become: true
+      user:
+        name: '{{ username }}'
+        shell: /bin/zsh
+

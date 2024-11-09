@@ -19,3 +19,4 @@
 - import_playbook: upgrade.yaml
 - import_playbook: personalize.yaml
 - import_playbook: chrome.yaml
+- import_playbook: terminal.yaml
