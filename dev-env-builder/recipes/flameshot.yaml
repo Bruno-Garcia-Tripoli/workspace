@@ -1,0 +1,34 @@
+---
+- name: Install Flameshot
+  hosts: all
+  vars_files:
+    - "{{ playbook_dir }}/group_vars/vars.yaml"
+  gather_facts: true
+  vars:
+    ansible_home: "{{ lookup('env', 'HOME') }}"
+  tasks:
+    - name: Install Flameshot
+      become: true
+      apt:
+        name:
+          - flameshot
+        state: latest
+
+    - name: Create autostart folder
+      file:
+        path: '{{ ansible_home }}/.config/autostart'
+        state: directory
+        recurse: yes
+
+    - name: Add flameshot to start
+      copy:
+        content: |
+          [Desktop Entry]
+          Type=Application
+          Exec=flameshot
+          Hidden=false
+          NoDisplay=false
+          X-GNOME-Autostart-enabled=true
+          Name=Flameshot
+        dest: '{{ ansible_home }}/.config/autostart/flameshot.desktop'
+        mode: +x
