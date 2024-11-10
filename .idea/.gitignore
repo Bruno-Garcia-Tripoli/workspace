@@ -4,9 +4,6 @@
 
 #### except
 
-# Version Control configuration for your project
-!vcs.xml
-
 # how IDEA should treat the text files in your project
 !encodings.xml
 

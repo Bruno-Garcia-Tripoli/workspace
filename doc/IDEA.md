@@ -24,6 +24,9 @@ The following files are explicitly included to ensure a consistent setup across 
 
 - `vcs.xml`: Contains version control configuration, ensuring consistency in how the IDE interacts with the version
   control system.
+
+  In some projects, this file may vary for each user, and in such cases, it can be excluded from version control to
+  avoid tracking personal configurations.
 - `encodings.xml`: Manages file encoding preferences, ensuring files are consistently read and written across different
   environments.
 - `sqldialects.xml`: Stores SQL dialect configurations that help the IDE provide appropriate syntax highlighting and
